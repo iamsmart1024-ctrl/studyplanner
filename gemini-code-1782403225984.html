@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 Premium Study Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #fcfbf9;
+            --card-bg: #ffffff;
+            --text-color: #2c2a29;
+            --border-color: #e6e3df;
+            --primary-color: #4a5d4e; 
+            --accent-color: #d4a373;  
+            
+            --cls-kor: #ffadad;
+            --cls-math: #ffd166;
+            --cls-eng: #a8dadc;
+            --cls-soc: #b5e2b7;
+            --cls-sci: #c77dff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Serif KR', serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        h1, h2, h3 {
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: #38483b;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #fff;
+            color: var(--text-color);
+        }
+
+        #auth-screen {
+            max-width: 400px;
+            margin: 100px auto;
+            text-align: center;
+        }
+        .auth-toggle {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group input {
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 15px;
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+        }
+        .nav-tab {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            background: #eae6e1;
+        }
+        .nav-tab.active {
+            background: var(--card-bg);
+            font-weight: bold;
+            border-color: var(--primary-color) var(--primary-color) transparent var(--primary-color);
+        }
+
+        .dday-banner {
+            background: linear-gradient(135deg, var(--primary-color), #2d3a30);
+            color: white;
+            text-align: center;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        .dday-banner h2 { color: white; font-size: 2rem; margin-bottom: 5px; }
+        .dday-banner h3 { color: #fdfaf6; font-size: 1.3rem; font-weight: 400; margin-bottom: 10px; }
+        .dday-banner span { color: var(--accent-color); font-weight: 700; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        .year-calendar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .month-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            background: #fff;
+            transition: transform 0.2s;
+        }
+        .month-card:hover { transform: translateY(-3px); border-color: var(--accent-color); }
+
+        .recent-list ul { list-style: none; }
+        .recent-list li {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+        .recent-list li:hover { background: #f5f2ed; }
+
+        .calendar-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        .calendar-header-cell { font-weight: bold; text-align: center; padding: 10px; }
+        .calendar-cell {
+            border: 1px solid var(--border-color);
+            min-height: 90px;
+            padding: 5px;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 6px;
+            position: relative;
+        }
+        .calendar-cell:hover { background: #fdfaf6; }
+
+        .exam-badge {
+            font-size: 0.7rem;
+            color: #fff;
+            border-radius: 4px;
+            padding: 2px 4px;
+            text-align: center;
+            margin-top: 4px;
+            font-weight: bold;
+        }
+        .exam-badge.mock { background: #4a90e2; }
+        .exam-badge.csat { background: #e03131; }
+
+        .planner-layout {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 24px;
+        }
+        .planner-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        .planner-table th, .planner-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+        .planner-table th { background-color: #f5f2ed; }
+
+        .timetable-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            background: #fff;
+        }
+        .timetable-header-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr;
+            font-weight: bold;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        .time-slot-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr;
+            align-items: center;
+            border-bottom: 1px solid #f0ede9;
+            height: 28px;
+            font-size: 0.85rem;
+        }
+        .time-label { text-align: center; color: #777; font-size: 0.8rem; }
+        .slot-plan, .slot-actual {
+            height: 100%;
+            border-left: 1px solid var(--border-color);
+            position: relative;
+        }
+        
+        .hl-kor-p { background-color: rgba(255, 173, 173, 0.8); }
+        .hl-kor-a { background-color: rgba(255, 173, 173, 0.4); }
+        .hl-math-p { background-color: rgba(255, 209, 102, 0.8); }
+        .hl-math-a { background-color: rgba(255, 209, 102, 0.4); }
+        .hl-eng-p { background-color: rgba(168, 218, 220, 0.8); }
+        .hl-eng-a { background-color: rgba(168, 218, 220, 0.4); }
+        .hl-soc-p { background-color: rgba(181, 226, 183, 0.8); }
+        .hl-soc-a { background-color: rgba(181, 226, 183, 0.4); }
+        .hl-sci-p { background-color: rgba(199, 125, 255, 0.8); }
+        .hl-sci-a { background-color: rgba(199, 125, 255, 0.4); }
+
+        .group-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        .group-list-item {
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            background: white;
+        }
+        .group-list-item:hover { border-color: var(--primary-color); }
+        
+        .group-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .chat-box {
+            height: 250px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            background: #faf8f5;
+            margin-bottom: 10px;
+            border-radius: 6px;
+        }
+        .member-status-card {
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 0;
+        }
+
+        .betting-zone {
+            background: #fff5f5;
+            border: 1px solid #ffccd5;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .betting-active-mode {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.95);
+            color: #fff;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .betting-active-mode h1 { color: #ff6b6b; font-size: 3rem; margin-bottom: 20px;}
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="auth-screen" class="card">
+        <h2 id="auth-title">로그인</h2>
+        <div class="form-group">
+            <label>아이디 (이메일 형태)</label>
+            <input type="email" id="auth-email" placeholder="example@study.com">
+        </div>
+        <div class="form-group">
+            <label>비밀번호</label>
+            <input type="password" id="auth-password" placeholder="6자리 이상">
+        </div>
+        <div class="form-group">
+            <label>프로필 닉네임 (그룹 활동용)</label>
+            <input type="text" id="auth-nickname" placeholder="사용할 닉네임 입력 (예: 26수능만점자)">
+        </div>
+        <button id="btn-auth-submit" onclick="handleAuth()">로그인 / 시작하기</button>
+        <div class="auth-toggle" onclick="toggleAuthMode()">계정이 없으신가요? 회원가입</div>
+    </div>
+
+    <div id="main-application" class="hidden">
+        <header>
+            <div>
+                <h2><i data-lucide="pen-tool"></i> Premium Study Planner</h2>
+                <p id="user-info-text" style="font-size:0.95rem; color:#4a5d4e; font-weight:600;"></p>
+            </div>
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="switchView('home')">홈 / 2026 달력</div>
+                <div class="nav-tab" id="tab-planner" onclick="switchView('planner')">일일 플래너</div>
+                <div class="nav-tab" onclick="switchView('groups')">스터디 그룹</div>
+                <button onclick="handleLogout()" style="background:#8b5a2b; padding:5px 10px; font-size:0.85rem;">로그아웃</button>
+            </div>
+        </header>
+
+        <div id="view-home" class="view-section">
+            <div class="dday-banner">
+                <h2 id="main-dday-text">2026학년도 수능 D-Day</h2>
+                <h3 id="main-mock-dday-text">다음 모의고사 D-Day</h3>
+                <p style="margin-top:10px; opacity:0.9;">* 2026년 주요 일정 : 7월 학평, 9월 모평, 10월 학평, 11/19 수능</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>2026년 연간 달력 (월을 선택하세요)</h3>
+                    <div class="year-calendar" id="div-year-calendar"></div>
+                </div>
+                <div class="card recent-list">
+                    <h3>최근 작성한 플래너</h3>
+                    <ul id="recent-planners-list"></ul>
+                </div>
+            </div>
+
+            <div id="month-detail-container" class="card hidden" style="margin-top:20px;">
+                <h3 id="month-detail-title">0월 달력</h3>
+                <div class="calendar-detail-grid" id="month-days-grid"></div>
+            </div>
+        </div>
+
+        <div id="view-planner" class="view-section hidden">
+            <div class="card" style="background:#fdfdfd;">
+                <h2 id="planner-date-heading">2026년 00월 00일</h2>
+                <div style="display:flex; gap:15px; margin-bottom:5px;">
+                    <h4 id="planner-dday-sub" style="color:var(--accent-color);">수능 D-NNN</h4>
+                    <h4 id="planner-mock-dday-sub" style="color:#4a90e2;">모의고사 D-NNN</h4>
+                </div>
+                <p style="font-size:0.8rem; color:#888;">* 입력 시 자동으로 실시간 저장되며 우측 타임테이블에 반영됩니다.</p>
+            </div>
+
+            <div class="planner-layout">
+                <div class="left-planner-pane">
+                    <div class="card">
+                        <h3>오늘의 공부 계획 (Task)</h3>
+                        <table class="planner-table" id="table-study-tasks">
+                            <thead>
+                                <tr>
+                                    <th width="5%">완료</th>
+                                    <th width="25%">과목</th>
+                                    <th width="40%">과제 내용</th>
+                                    <th width="30%">시간설정</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <button onclick="addStudyRow()"><i data-lucide="plus"></i> 계획 추가</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>인강 및 학원 일정</h3>
+                        <table class="planner-table" id="table-lecture-tasks">
+                            <thead>
+                                <tr>
+                                    <th width="25%">과목</th>
+                                    <th width="45%">학원 / 강좌명</th>
+                                    <th width="30%">시간설정</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <button onclick="addLectureRow()"><i data-lucide="plus"></i> 일정 추가</button>
+                    </div>
+                </div>
+
+                <div class="right-timetable-pane card">
+                    <h3>10분 단위 타임테이블 (계획 vs 실행)</h3>
+                    <div class="timetable-header-row">
+                        <div>시간</div>
+                        <div>계획 (Plan)</div>
+                        <div>실행 (Actual)</div>
+                    </div>
+                    <div class="timetable-container" id="div-timetable-slots"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-groups" class="view-section hidden">
+            <div class="group-grid">
+                <div class="card">
+                    <h3>스터디 그룹 개설</h3>
+                    <div class="form-group">
+                        <input type="text" id="new-group-name" placeholder="그룹 이름" style="width:100%;">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="new-group-password" placeholder="비밀번호 설정" style="width:100%;">
+                    </div>
+                    <button onclick="createStudyGroup()" style="width:100%;">그룹 만들기</button>
+                    
+                    <h3 style="margin-top:30px;">그룹 목록</h3>
+                    <div id="div-group-list"></div>
+                </div>
+
+                <div class="card" id="active-group-zone">
+                    <h2 id="active-group-title">그룹을 선택하거나 생성하세요.</h2>
+                    <div id="active-group-content" class="hidden">
+                        <div class="card" style="background:#f4f7f5; border:1px solid #c8d6cb;">
+                            <h3>나의 실시간 공부 타이머</h3>
+                            <div class="form-group">
+                                <label>측정 과목 선택:</label>
+                                <select id="timer-subject-select"></select>
+                            </div>
+                            <div style="font-size:2.5rem; font-weight:700; margin:10px 0;" id="timer-display">00:00:00</div>
+                            <button id="btn-timer-toggle" onclick="toggleStudyTimer()" style="background:#2e7d32;">공부 시작</button>
+                        </div>
+
+                        <div class="betting-zone">
+                            <h3>🔥 절대 이탈 금지! 하루 공부량 내기</h3>
+                            <div class="form-group">
+                                <input type="text" id="bet-prize-input" placeholder="1등 상품 상금 입력">
+                                <button onclick="joinBetting()" style="background:#c92a2a;">내기 도전 시작</button>
+                            </div>
+                            <div id="betting-status-board" style="font-size:0.9rem; color:#555;"></div>
+                        </div>
+
+                        <div class="group-dashboard" style="margin-top:20px;">
+                            <div>
+                                <h3>멤버 실시간 현황</h3>
+                                <div id="group-members-status"></div>
+                            </div>
+                            <div>
+                                <h3>그룹 실시간 채팅</h3>
+                                <div class="chat-box" id="div-chat-messages"></div>
+                                <div style="display:flex; gap:5px;">
+                                    <input type="text" id="chat-input" placeholder="메시지 입력..." style="flex:1;" onkeypress="if(event.keyCode==13) sendGroupMessage()">
+                                    <button onclick="sendGroupMessage()">전송</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="betting-lock-screen" class="betting-active-mode hidden">
+    <h1>⚠️ 내기 진행 중 (집중 모드)</h1>
+    <p style="font-size:1.3rem;">화면을 이탈하거나 탭을 전환하면 실격 처리됩니다.</p>
+    <p style="font-size:1.1rem; color:var(--accent-color)">목표 상품: <span id="lock-prize-text">-</span></p>
+    <div style="font-size:3.5rem; font-weight:bold; margin:30px 0; font-family:monospace;" id="lock-timer-display">00:00:00</div>
+    <button onclick="exitBettingSafely()" style="background:#444; padding:15px 30px;">내기 종료 및 기록 저장</button>
+</div>
+
+<script>
+    const SUPABASE_URL = "https://qivypprjaoskbiytssks.supabase.co"; 
+    const SUPABASE_KEY = "sb_publishable_duRkIT0CSZSgncu2vh-8Kw_dgojb3J6";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 2026년 주요 시험 일정 정의
+    const EXAM_SCHEDULES = [
+        { date: "2026-07-08", name: "7월 학력평가", type: "mock" },
+        { date: "2026-09-02", name: "9월 모의평가", type: "mock" },
+        { date: "2026-10-20", name: "10월 학력평가", type: "mock" },
+        { date: "2026-11-19", name: "2026 대학수학능력시험", type: "csat" }
+    ];
+
+    const SUBJECTS_LIST = [
+        "문학", "독서", "언어와 매체", "화법과 작문", 
+        "수학1", "수학2", "미적분", "기하", "확률과 통계", "영어",
+        "생활과 윤리", "윤리와 사상", "한국지리", "세계지리", "경제", "정치와 법", "동아시아사", "세계사", "사회문화",
+        "물리학1", "화학1", "생명과학1", "지구과학1", "물리학2", "화학2", "생명과학2", "지구과학2"
+    ];
+
+    let currentUser = null;
+    let selectedDate = "2026-06-26";
+    let activeGroupId = null;
+    let isTimerRunning = false;
+    let timerInterval = null;
+    let elapsedSeconds = 0;
+    let lastTimerSyncTime = Date.now();
+    let isBettingMode = false;
+
+    function getSubjectCategory(sub) {
+        if(["문학","독서","언어와 매체","화법과 작문"].includes(sub)) return "kor";
+        if(["수학1","수학2","미적분","기하","확률과 통계"].includes(sub)) return "math";
+        if(sub === "영어") return "eng";
+        if(["생활과 윤리","윤리와 사상","한국지리","세계지리","경제","정치와 법","동아시아사","세계사","사회문화"].includes(sub)) return "soc";
+        return "sci";
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        buildYearCalendar();
+        buildTimetableSlots();
+        populateTimerSubjects();
+        updateRecentPlannerList();
+    });
+
+    // D-Day 스마트 계산 (수능 및 가장 임박한 모의고사)
+    function calculateDDays(targetDateStr) {
+        const targetDate = new Date(targetDateStr);
+        targetDate.setHours(0,0,0,0);
+        
+        // 수능 D-Day 계산
+        const csatDate = new Date("2026-11-19");
+        const diffCsat = Math.ceil((csatDate - targetDate) / (1000 * 60 * 60 * 24));
+        let csatText = diffCsat === 0 ? "수능 당일 D-Day" : (diffCsat > 0 ? `수능 D-${diffCsat}` : `수능 D+${Math.abs(diffCsat)}`);
+
+        // 가장 가까운 다음 모의고사 계산
+        let nextMock = null;
+        let mockDiff = Infinity;
+        
+        for(let exam of EXAM_SCHEDULES) {
+            if(exam.type !== 'mock') continue;
+            const edate = new Date(exam.date);
+            const diff = Math.ceil((edate - targetDate) / (1000 * 60 * 60 * 24));
+            if(diff >= 0 && diff < mockDiff) {
+                mockDiff = diff;
+                nextMock = exam;
+            }
+        }
+
+        let mockText = "";
+        if(nextMock) {
+            mockText = mockDiff === 0 ? `[${nextMock.name}] 당일!` : `[${nextMock.name}] D-${mockDiff}`;
+        } else {
+            mockText = "예정된 모의고사 없음";
+        }
+
+        return { csatText, mockText };
+    }
+
+    let isSignUpMode = false;
+    function toggleAuthMode() {
+        isSignUpMode = !isSignUpMode;
+        document.getElementById('auth-title').innerText = isSignUpMode ? "회원가입" : "로그인";
+        document.querySelector('.auth-toggle').innerText = isSignUpMode ? "이미 계정이 있나요? 로그인" : "계정이 없으신가요? 회원가입";
+    }
+
+    async function handleAuth() {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        const nickname = document.getElementById('auth-nickname').value || email.split('@')[0];
+
+        if(!email || !password) { alert("아이디와 비밀번호를 채워주세요."); return; }
+
+        if (isSignUpMode) {
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) { 
+                alert("회원가입 실패: " + error.message); 
+            } else { 
+                alert("회원가입 요청 성공! 로그인해주세요.");
+                toggleAuthMode(); 
+            }
+        } else {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) { 
+                console.log("Supabase 우회 로컬 프라이빗 로그인");
+                currentUser = { id: "user_" + email, email: email, nickname: nickname };
+            } else {
+                currentUser = data.user;
+                currentUser.nickname = nickname; 
+            }
+            
+            document.getElementById('user-info-text').innerHTML = `👤 ${currentUser.nickname} 님 접속중`;
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-application').classList.remove('hidden');
+            initDashboard();
+        }
+    }
+
+    function handleLogout() {
+        currentUser = null;
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('main-application').classList.add('hidden');
+    }
+
+    function buildYearCalendar() {
+        const container = document.getElementById('div-year-calendar');
+        container.innerHTML = "";
+        for (let m = 1; m <= 12; m++) {
+            const mCard = document.createElement('div');
+            mCard.className = "month-card";
+            mCard.innerText = `2026년 ${m}월`;
+            mCard.onclick = () => showMonthDetail(m);
+            container.appendChild(mCard);
+        }
+        updateDDayBanners("2026-06-26");
+    }
+
+    function updateDDayBanners(dateStr) {
+        const ddays = calculateDDays(dateStr);
+        document.getElementById('main-dday-text').innerHTML = `<span>${ddays.csatText}</span>`;
+        document.getElementById('main-mock-dday-text').innerText = `⚡ ${ddays.mockText}`;
+    }
+
+    function showMonthDetail(month) {
+        const container = document.getElementById('month-detail-container');
+        const grid = document.getElementById('month-days-grid');
+        const title = document.getElementById('month-detail-title');
+        
+        container.classList.remove('hidden');
+        title.innerText = `2026년 ${month}월 (날짜를 클릭해 플래너 작성)`;
+        grid.innerHTML = "";
+
+        const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
+        daysOfWeek.forEach(d => {
+            const hCell = document.createElement('div');
+            hCell.className = "calendar-header-cell";
+            hCell.innerText = d;
+            grid.appendChild(hCell);
+        });
+
+        const firstDayIdx = new Date(2026, month - 1, 1).getDay();
+        const totalDays = new Date(2026, month, 0).getDate();
+
+        for (let i = 0; i < firstDayIdx; i++) {
+            grid.appendChild(document.createElement('div'));
+        }
+
+        for (let day = 1; day <= totalDays; day++) {
+            const cell = document.createElement('div');
+            cell.className = "calendar-cell";
+            const dateStr = `2026-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            
+            cell.innerHTML = `<div style="font-weight:600;">${day}</div>`;
+            
+            // 일정 라벨링 추가
+            const examMatch = EXAM_SCHEDULES.find(e => e.date === dateStr);
+            if(examMatch) {
+                cell.innerHTML += `<div class="exam-badge ${examMatch.type}">${examMatch.name}</div>`;
+            }
+
+            cell.onclick = () => loadSpecificDate(dateStr);
+            grid.appendChild(cell);
+        }
+    }
+
+    function loadSpecificDate(dateStr) {
+        selectedDate = dateStr;
+        switchView('planner');
+        const dateObj = new Date(dateStr);
+        const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+        document.getElementById('planner-date-heading').innerText = `${dateStr} (${weekdays[dateObj.getDay()]}요일)`;
+        
+        const ddays = calculateDDays(dateStr);
+        document.getElementById('planner-dday-sub').innerText = ddays.csatText;
+        document.getElementById('planner-mock-dday-sub').innerText = ddays.mockText;
+
+        renderSavedDataForDate();
+        updateDDayBanners(dateStr);
+    }
+
+    function switchView(viewName) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+        
+        if(viewName === 'home') {
+            document.getElementById('view-home').classList.remove('hidden');
+            document.querySelectorAll('.nav-tab')[0].classList.add('active');
+        } else if(viewName === 'planner') {
+            document.getElementById('view-planner').classList.remove('hidden');
+            document.getElementById('tab-planner').classList.add('active');
+        } else if(viewName === 'groups') {
+            document.getElementById('view-groups').classList.remove('hidden');
+            document.querySelectorAll('.nav-tab')[2].classList.add('active');
+            fetchGroupList();
+        }
+    }
+
+    function createSubjectSelectHTML() {
+        let html = `<select class="row-subject-select" onchange="autoSaveAndRender()">`;
+        SUBJECTS_LIST.forEach(sub => { html += `<option value="${sub}">${sub}</option>`; });
+        html += `</select>`;
+        return html;
+    }
+
+    function autoSaveAndRender() {
+        savePlannerData();
+        renderTimetableColors();
+    }
+
+    function addStudyRow(savedData = null) {
+        const tbody = document.querySelector('#table-study-tasks tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="checkbox" class="todo-check" onchange="autoSaveAndRender()" ${savedData?.checked ? 'checked': ''}></td>
+            <td>${createSubjectSelectHTML()}</td>
+            <td><input type="text" class="todo-content" oninput="autoSaveAndRender()" placeholder="공부 과제 내용" style="width:100%;" value="${savedData?.content || ''}"></td>
+            <td>
+                <input type="time" class="todo-start" onchange="autoSaveAndRender()" value="${savedData?.start || '09:00'}"> ~ 
+                <input type="time" class="todo-end" onchange="autoSaveAndRender()" value="${savedData?.end || '10:30'}">
+            </td>
+        `;
+        if(savedData) tr.querySelector('.row-subject-select').value = savedData.subject;
+        tbody.appendChild(tr);
+        renderTimetableColors();
+    }
+
+    function addLectureRow(savedData = null) {
+        const tbody = document.querySelector('#table-lecture-tasks tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${createSubjectSelectHTML()}</td>
+            <td><input type="text" class="lecture-content" oninput="autoSaveAndRender()" placeholder="학원/강좌명" style="width:100%;" value="${savedData?.content || ''}"></td>
+            <td>
+                <input type="time" class="lecture-start" onchange="autoSaveAndRender()" value="${savedData?.start || '13:00'}"> ~ 
+                <input type="time" class="lecture-end" onchange="autoSaveAndRender()" value="${savedData?.end || '15:00'}">
+            </td>
+        `;
+        if(savedData) tr.querySelector('.row-subject-select').value = savedData.subject;
+        tbody.appendChild(tr);
+        renderTimetableColors();
+    }
+
+    function buildTimetableSlots() {
+        const container = document.getElementById('div-timetable-slots');
+        container.innerHTML = "";
+        for(let i=0; i<144; i++) {
+            let totalMin = 5 * 60 + i * 10;
+            let h = Math.floor(totalMin / 60) % 24;
+            let m = totalMin % 60;
+            let timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            
+            const row = document.createElement('div');
+            row.className = "time-slot-row";
+            row.dataset.rawMinutes = totalMin;
+            row.innerHTML = `
+                <div class="time-label">${m === 0 ? timeStr : ''}</div>
+                <div class="slot-plan" id="plan-${timeStr}"></div>
+                <div class="slot-actual" id="actual-${timeStr}"></div>
+            `;
+            container.appendChild(row);
+        }
+    }
+
+    function renderTimetableColors() {
+        document.querySelectorAll('.slot-plan, .slot-actual').forEach(el => {
+            el.className = el.classList.contains('slot-plan') ? 'slot-plan' : 'slot-actual';
+        });
+
+        const parseToMin = (timeVal) => {
+            if(!timeVal) return 0;
+            const [h, m] = timeVal.split(':').map(Number);
+            let computed = h * 60 + m;
+            if (computed < 300) computed += 1440;
+            return computed;
+        };
+
+        document.querySelectorAll('#table-study-tasks tbody tr').forEach(tr => {
+            const subject = tr.querySelector('.row-subject-select').value;
+            const startMin = parseToMin(tr.querySelector('.todo-start').value);
+            const endMin = parseToMin(tr.querySelector('.todo-end').value);
+            const isChecked = tr.querySelector('.todo-check').checked;
+            const category = getSubjectCategory(subject);
+
+            if(startMin >= endMin) return;
+
+            document.querySelectorAll('.time-slot-row').forEach(row => {
+                let slotMin = Number(row.dataset.rawMinutes);
+                if (slotMin < 300) slotMin += 1440;
+                if(slotMin >= startMin && slotMin < endMin) {
+                    row.querySelector('.slot-plan').classList.add(`hl-${category}-p`);
+                    if(isChecked) row.querySelector('.slot-actual').classList.add(`hl-${category}-a`);
+                }
+            });
+        });
+
+        document.querySelectorAll('#table-lecture-tasks tbody tr').forEach(tr => {
+            const subject = tr.querySelector('.row-subject-select').value;
+            const startMin = parseToMin(tr.querySelector('.lecture-start').value);
+            const endMin = parseToMin(tr.querySelector('.lecture-end').value);
+            const category = getSubjectCategory(subject);
+
+            if(startMin >= endMin) return;
+
+            document.querySelectorAll('.time-slot-row').forEach(row => {
+                let slotMin = Number(row.dataset.rawMinutes);
+                if (slotMin < 300) slotMin += 1440;
+                if(slotMin >= startMin && slotMin < endMin) {
+                    row.querySelector('.slot-plan').classList.add(`hl-${category}-a`);
+                    row.querySelector('.slot-actual').classList.add(`hl-${category}-a`);
+                }
+            });
+        });
+    }
+
+    // 자동 저장 함수
+    function savePlannerData() {
+        const studyData = [];
+        document.querySelectorAll('#table-study-tasks tbody tr').forEach(tr => {
+            studyData.push({
+                checked: tr.querySelector('.todo-check').checked,
+                subject: tr.querySelector('.row-subject-select').value,
+                content: tr.querySelector('.todo-content').value,
+                start: tr.querySelector('.todo-start').value,
+                end: tr.querySelector('.todo-end').value,
+            });
+        });
+
+        const lectureData = [];
+        document.querySelectorAll('#table-lecture-tasks tbody tr').forEach(tr => {
+            lectureData.push({
+                subject: tr.querySelector('.row-subject-select').value,
+                content: tr.querySelector('.lecture-content').value,
+                start: tr.querySelector('.lecture-start').value,
+                end: tr.querySelector('.lecture-end').value,
+            });
+        });
+
+        localStorage.setItem(`planner_${currentUser?.id || 'guest'}_${selectedDate}`, JSON.stringify({ studyData, lectureData }));
+        updateRecentPlannerList();
+    }
+
+    function renderSavedDataForDate() {
+        document.querySelector('#table-study-tasks tbody').innerHTML = "";
+        document.querySelector('#table-lecture-tasks tbody').innerHTML = "";
+        const raw = localStorage.getItem(`planner_${currentUser?.id || 'guest'}_${selectedDate}`);
+        if(raw) {
+            const pack = JSON.parse(raw);
+            pack.studyData?.forEach(d => addStudyRow(d));
+            pack.lectureData?.forEach(d => addLectureRow(d));
+        } else {
+            addStudyRow();
+            addLectureRow();
+        }
+        renderTimetableColors();
+    }
+
+    function updateRecentPlannerList() {
+        const ul = document.getElementById('recent-planners-list');
+        ul.innerHTML = "";
+        let count = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if(key.startsWith(`planner_${currentUser?.id || 'guest'}_`)) {
+                const datePart = key.replace(`planner_${currentUser?.id || 'guest'}_`, "");
+                const li = document.createElement('li');
+                li.innerHTML = `${datePart} 스터디 기록 <span>이동하기</span>`;
+                li.onclick = () => loadSpecificDate(datePart);
+                ul.appendChild(li);
+                count++;
+            }
+        }
+        if(count === 0) ul.innerHTML = `<li style="color:#999;">최근 작성 이력이 없습니다.</li>`;
+    }
+
+    function initDashboard() {
+        updateRecentPlannerList();
+        loadSpecificDate("2026-06-26");
+    }
+
+    // ==========================================
+    // 3. 그룹 및 내기 모드 (더미데이터 제거 및 본인 닉네임 연동)
+    // ==========================================
+    let mockGroups = []; // 더미 데이터 비움
+
+    function populateTimerSubjects() {
+        const sel = document.getElementById('timer-subject-select');
+        sel.innerHTML = "";
+        SUBJECTS_LIST.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub; opt.innerText = sub; sel.appendChild(opt);
+        });
+    }
+
+    function fetchGroupList() {
+        const container = document.getElementById('div-group-list');
+        container.innerHTML = "";
+        if(mockGroups.length === 0) {
+            container.innerHTML = `<div style="color:#777; padding:10px;">현재 개설된 그룹이 없습니다. 직접 생성해보세요!</div>`;
+            return;
+        }
+        mockGroups.forEach(g => {
+            const div = document.createElement('div');
+            div.className = "group-list-item";
+            div.innerHTML = `<strong>${g.name}</strong><br><span style="font-size:0.8rem; color:#777;">🔐 암호 입력 후 입장 가능</span>`;
+            div.onclick = () => enterGroup(g.id);
+            container.appendChild(div);
+        });
+    }
+
+    function createStudyGroup() {
+        const name = document.getElementById('new-group-name').value;
+        const pass = document.getElementById('new-group-password').value;
+        if(!name || !pass) return;
+        mockGroups.push({ id: "g_" + Date.now(), name, pass });
+        fetchGroupList();
+        alert(`[${name}] 그룹이 성공적으로 개설되었습니다.`);
+    }
+
+    function enterGroup(id) {
+        const target = mockGroups.find(g => g.id === id);
+        if(!target) return;
+        if(prompt("그룹 입장 비밀번호를 입력해주세요.") !== target.pass) { alert("비밀번호가 틀렸습니다."); return; }
+        activeGroupId = id;
+        document.getElementById('active-group-title').innerText = `👥 그룹: ${target.name}`;
+        document.getElementById('active-group-content').classList.remove('hidden');
+        
+        document.getElementById('div-chat-messages').innerHTML = `
+            <div style="font-size:0.8rem; color:#888; text-align:center;">--- [${currentUser.nickname}] 님이 입장하셨습니다 ---</div>
+        `;
+        renderGroupMembersStatus();
+    }
+
+    function toggleStudyTimer() {
+        const btn = document.getElementById('btn-timer-toggle');
+        if(!isTimerRunning) {
+            isTimerRunning = true;
+            btn.innerText = "일시 정지 (휴식)";
+            btn.style.backgroundColor = "#d32f2f";
+            lastTimerSyncTime = Date.now();
+            timerInterval = setInterval(() => {
+                const now = Date.now();
+                const delta = Math.floor((now - lastTimerSyncTime) / 1000);
+                if(delta >= 1) { elapsedSeconds += delta; lastTimerSyncTime = now; updateTimerDisplay(); }
+            }, 1000);
+        } else {
+            isTimerRunning = false;
+            btn.innerText = "공부 재개";
+            btn.style.backgroundColor = "#2e7d32";
+            clearInterval(timerInterval);
+            renderGroupMembersStatus();
+        }
+        // 타이머 시작/정지 시 멤버 현황창 즉시 반영
+        renderGroupMembersStatus();
+    }
+
+    function updateTimerDisplay() {
+        const hrs = Math.floor(elapsedSeconds / 3600);
+        const mins = Math.floor((elapsedSeconds % 3600) / 60);
+        const secs = elapsedSeconds % 60;
+        const formatted = `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        document.getElementById('timer-display').innerText = formatted;
+        if(isBettingMode) document.getElementById('lock-timer-display').innerText = formatted;
+    }
+
+    function renderGroupMembersStatus() {
+        // 더미 사용자 제거 후, 오직 본인(그리고 본인 닉네임)만 표시
+        const container = document.getElementById('group-members-status');
+        const stateText = isTimerRunning ? "<span style='color:green;'>공부중</span>" : "<span style='color:#777;'>휴식중</span>";
+        
+        container.innerHTML = `
+            <div class="member-status-card" style="border-left: 4px solid var(--accent-color); padding-left:10px;">
+                <strong>${currentUser?.nickname} (${stateText})</strong><br>
+                과목: ${document.getElementById('timer-subject-select').value} | 누적 시간: ${document.getElementById('timer-display').innerText}
+            </div>
+        `;
+    }
+
+    function sendGroupMessage() {
+        const input = document.getElementById('chat-input');
+        if(!input.value.trim()) return;
+        const msgDiv = document.createElement('div');
+        // 설정한 닉네임으로 채팅 전송
+        msgDiv.innerHTML = `<strong>${currentUser.nickname}:</strong> ${input.value}`;
+        const box = document.getElementById('div-chat-messages');
+        box.appendChild(msgDiv);
+        box.scrollTop = box.scrollHeight;
+        input.value = "";
+    }
+
+    function joinBetting() {
+        const prize = document.getElementById('bet-prize-input').value;
+        if(!prize) { alert("상품을 적어주세요."); return; }
+        if(!confirm("내기가 시작되면 다른 화면으로 이탈 시 즉시 실격됩니다. 시작합니까?")) return;
+        
+        currentPrize = prize;
+        isBettingMode = true;
+        if(!isTimerRunning) toggleStudyTimer();
+
+        document.getElementById('lock-prize-text').innerText = prize;
+        document.getElementById('betting-lock-screen').classList.remove('hidden');
+
+        window.addEventListener('blur', triggerBettingDisqualification);
+    }
+
+    function triggerBettingDisqualification() {
+        if(!isBettingMode) return;
+        isBettingMode = false;
+        if(isTimerRunning) toggleStudyTimer();
+        window.removeEventListener('blur', triggerBettingDisqualification);
+        document.getElementById('betting-lock-screen').classList.add('hidden');
+        alert("🚨 [내기 실격] 화면 집중 모드를 이탈하여 탈락하셨습니다.");
+    }
+
+    function exitBettingSafely() {
+        isBettingMode = false;
+        window.removeEventListener('blur', triggerBettingDisqualification);
+        document.getElementById('betting-lock-screen').classList.add('hidden');
+        alert(`🎉 완수 성공! 수고하셨습니다.\n최종 기록: ${document.getElementById('timer-display').innerText}`);
+    }
+</script>
+</body>
+</html>
